@@ -1,0 +1,127 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans:
+    'DM Sans', 'Noto Sans Thai', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --color-canvas: #f8f9f6;
+  --color-surface: #ffffff;
+  --color-ink: #203e32;
+  --color-ink-soft: #385742;
+  --color-muted: #66736a;
+  --color-faint: #96a099;
+  --color-line: #e6eae2;
+  --color-line-strong: #cfd8c9;
+  --color-mint: #edf2e6;
+  --color-mint-soft: #f3f7ee;
+  --color-lime: #d3eab4;
+  --color-lime-deep: #bfdd99;
+  --color-leaf: #64874a;
+  --color-moss: #285b48;
+  --color-danger: #b4463c;
+  --color-danger-soft: #fbedeb;
+  --color-amber: #8f6a1f;
+  --color-amber-soft: #fbf4e4;
+  --color-sky-soft: #edf2fc;
+  --color-sky-ink: #6f87bd;
+
+  --radius-card: 12px;
+  --radius-field: 10px;
+
+  --shadow-card: 0 1px 2px rgba(32, 62, 50, 0.04), 0 10px 28px -18px rgba(32, 62, 50, 0.22);
+  --shadow-pop: 0 4px 12px rgba(32, 62, 50, 0.08), 0 24px 48px -16px rgba(32, 62, 50, 0.28);
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+  body {
+    margin: 0;
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  :lang(th) {
+    font-family: var(--font-sans);
+  }
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-leaf);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.14;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' opacity='.24' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+@keyframes lingo-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes lingo-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.anim-fade-up {
+  animation: lingo-fade-up 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.anim-float {
+  animation: lingo-float 6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .anim-fade-up,
+  .anim-float {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}

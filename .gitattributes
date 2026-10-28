@@ -1,0 +1,15 @@
+# ซอร์สใช้ LF เสมอ (กัน Windows แปลงเป็น CRLF)
+* text=auto eol=lf
+
+# ไฟล์ทดสอบต้องเก็บไบต์เดิมทุกตัว (บางไฟล์ตั้งใจใช้ CRLF / รหัสภาษาเก่า)
+e2e/fixtures/** -text
+src/**/__fixtures__/** -text
+
+*.pdf binary
+*.docx binary
+*.xlsx binary
+*.pptx binary
+*.png binary
+*.jpg binary
+*.ttf binary
+*.wasm binary
