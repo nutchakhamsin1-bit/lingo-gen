@@ -1,0 +1,31 @@
+<!doctype html>
+<!-- ต้นฉบับของ e2e/fixtures/thai-quotation.pdf (ข้อมูลสมมติ) — สร้างใหม่ด้วย:
+     chrome --headless=new --no-pdf-header-footer --virtual-time-budget=8000 --print-to-pdf=e2e/fixtures/thai-quotation.pdf e2e/fixtures/source/thai-quotation.html
+     Chrome เก็บวรรณยุกต์ที่ซ้อนบนสระบน (ที่ ทั้ง เงื่อน) เป็นรหัสว่าง ใช้ทดสอบ src/lib/formats/pdfToUnicode.ts -->
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=block" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 18mm; }
+  body { font-family: 'Sarabun', sans-serif; color: #222; font-size: 13px; }
+  h1 { color: #2b5a8c; font-size: 30px; margin: 0; }
+  .right { text-align: right; color: #666; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  td, th { padding: 8px 6px; border-bottom: 1px solid #ddd; text-align: left; }
+  .total { text-align: right; font-weight: 700; font-size: 16px; margin-top: 12px; }
+</style>
+</head>
+<body>
+  <div class="right">เลขที่เอกสาร: QT-TEST-001<br>วันที่: 1 พฤศจิกายน 2569</div>
+  <h1>ใบเสนอราคา</h1>
+  <p><b>ผู้เสนอราคา</b> บริษัท ตัวอย่าง จำกัด</p>
+  <table>
+    <tr><th>ลำดับ</th><th>รายการ</th><th>ราคา (บาท)</th></tr>
+    <tr><td>1</td><td>ออกแบบหน้าเว็บทั้งหมด</td><td>1,500.00</td></tr>
+    <tr><td>2</td><td>เพิ่มฟังก์ชันค้นหา</td><td>500.00</td></tr>
+  </table>
+  <div class="total">รวมเป็นเงินทั้งสิ้น 2,000.00</div>
+  <p>เงื่อนไข: ราคานี้ยังไม่รวมภาษี หนึ่งเดือนหลังส่งมอบงาน</p>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "title": "Welcome back",
+  "buttons": { "save": "Save", "cancel": "Cancel" },
+  "id": "user_42",
+  "url": "https://example.com",
+  "count": 3,
+  "tips": ["Drag files here", "Press Enter to start"]
+}

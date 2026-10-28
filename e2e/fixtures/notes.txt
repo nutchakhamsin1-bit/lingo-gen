@@ -1,0 +1,6 @@
+Meeting notes
+
+  Ship the new upload screen on Friday.
+Check the numbers: 42, 3.14
+
+Thanks, team!
