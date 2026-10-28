@@ -179,20 +179,26 @@ function paragraphSlot(p: Element, d: Dialect, targetLang: LangCode): Slot | nul
           const props = [...group.runs[0].children].find((c) => c.localName === 'rPr')
           if (props) shell.appendChild(props.cloneNode(true))
           // ขึ้นบรรทัดระดับย่อหน้าที่อยู่ในคำแปล วางแทรกระหว่าง run
+          // run ที่ไม่มีข้อความไม่ต้องใส่ (PowerPoint ถือว่า <a:r> ที่ไม่มี <a:t> เป็นไฟล์เสีย)
+          const hasContent = (pieces: Piece[]) => pieces.some((p) => (p.type === 'text' ? p.text : p.type === 'x'))
           const inline: Piece[] = []
           for (const piece of entry.content) {
             if (piece.type === 'x' && items.includes(nodes[piece.id - 1] as Element)) {
-              if (inline.length) {
+              if (hasContent(inline)) {
                 const part = shell.cloneNode(true) as Element
                 fill(part, inline.splice(0))
                 parent.insertBefore(part, anchor)
-              }
+              } else inline.length = 0
               usedBreaks.add(piece.id)
-              parent.insertBefore(nodes[piece.id - 1], anchor)
+              const lineBreak = nodes[piece.id - 1] as Element
+              if (d === DRAWING) [...lineBreak.children].find((c) => c.localName === 'rPr')?.setAttribute('lang', DRAWING_LANG[targetLang])
+              parent.insertBefore(lineBreak, anchor)
             } else inline.push(piece)
           }
-          fill(shell, inline)
-          parent.insertBefore(shell, anchor)
+          if (hasContent(inline)) {
+            fill(shell, inline)
+            parent.insertBefore(shell, anchor)
+          }
         }
         // ขึ้นบรรทัดที่ผู้แปลทำหาย วางต่อท้ายตามลำดับเดิม
         top.forEach((p) => {

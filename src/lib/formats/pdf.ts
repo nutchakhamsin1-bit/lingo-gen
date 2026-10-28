@@ -1,6 +1,6 @@
 import type { TextItem } from 'pdfjs-dist/types/src/display/api'
 import { recognizeImageText } from '../../services/ocr'
-import type { Font, TypeFeatures } from '@pdf-lib/fontkit'
+import type { Font, Glyph, TypeFeatures } from '@pdf-lib/fontkit'
 import type { PDFDocument, PDFFont, PDFName, PDFPage } from 'pdf-lib'
 import type { LangCode } from '../../types'
 import { layoutText, LINE_HEIGHT, sampleBackground, sampleTextColor, type Rgb } from '../imageText'
@@ -73,6 +73,8 @@ interface EmbeddedFont {
   features?: TypeFeatures
   /** ความกว้างของข้อความที่วัดแล้ว (หน่วยฟอนต์) */
   widths: Map<string, number>
+  /** glyph id ที่อยู่ในตาราง /W และ ToUnicode ของ pdf-lib แล้ว */
+  registered: Set<number>
 }
 
 interface TextRun {
@@ -130,6 +132,7 @@ async function embedFonts(doc: PDFDocument, texts: string[], lang: LangCode, bol
       face: fontkit.create(subset),
       features,
       widths: new Map(),
+      registered: new Set(),
     })
   }
 
@@ -150,6 +153,27 @@ async function embedFonts(doc: PDFDocument, texts: string[], lang: LangCode, bol
 type PdfLib = typeof import('pdf-lib')
 const fontKeys = new WeakMap<PDFPage, Map<EmbeddedFont, PDFName>>()
 
+/** รายการ glyph ภายใน pdf-lib ที่ใช้สร้างตารางความกว้าง (/W) และตารางแปลงกลับเป็นตัวอักษร (ToUnicode) */
+type GlyphCache = { font: Font; glyphCache: { access(): Glyph[] } }
+
+/**
+ * pdf-lib ใส่ในตารางเฉพาะ glyph ที่มีรหัสอักษรตรง ๆ ในฟอนต์ — glyph ที่ fontkit สลับรูปมา (เช่น วรรณยุกต์ .narrow)
+ * จึงไม่มีในตาราง โปรแกรมอ่าน PDF เดาเป็นตัวอื่น (คัดลอกแล้วได้ "ทั*งหมด") — เติมพร้อมรหัสอักษรเดิมให้ครบ
+ */
+function registerGlyph(font: EmbeddedFont, glyph: Glyph) {
+  if (font.registered.has(glyph.id)) return
+  const embedder = (font.pdf as unknown as { embedder?: GlyphCache }).embedder
+  const cache = embedder?.glyphCache.access()
+  if (!embedder || !cache) return
+  if (!font.registered.size) cache.forEach((g) => font.registered.add(g.id))
+  if (font.registered.has(glyph.id)) return
+  const own = embedder.font.getGlyph(glyph.id)
+  if (!own.codePoints.length) own.codePoints = glyph.codePoints
+  cache.push(own)
+  cache.sort((a, b) => a.id - b.id)
+  font.registered.add(glyph.id)
+}
+
 /**
  * วาดข้อความทีละ glyph ตามตำแหน่งที่ fontkit คำนวณ (รวมการเลื่อนสระ/วรรณยุกต์)
  * — drawText ของ pdf-lib ทิ้งตำแหน่งเหล่านี้ วรรณยุกต์ไทยจึงหายหรือลอยผิดที่
@@ -168,8 +192,6 @@ function drawRuns(lib: PdfLib, page: PDFPage, runs: TextRun[], x: number, y: num
     ops.push(lib.setFontAndSize(key, size))
     const scale = size / run.font.face.unitsPerEm
     const shaped = run.font.face.layout(run.text, run.font.features)
-    // glyph ที่ถูกสลับรูป (เช่น วรรณยุกต์ .narrow) ไม่มีรหัสอักษร — ผูกให้ คัดลอก/ค้นหาข้อความใน PDF จะได้ครบ
-    const embedded = (run.font.pdf as unknown as { embedder?: { font?: Font } }).embedder?.font
     shaped.glyphs.forEach((glyph, i) => {
       const pos = shaped.positions[i]
       ops.push(
@@ -177,8 +199,7 @@ function drawRuns(lib: PdfLib, page: PDFPage, runs: TextRun[], x: number, y: num
         lib.showText(lib.PDFHexString.of(glyph.id.toString(16).padStart(4, '0'))),
       )
       pen += pos.xAdvance * scale
-      const target = embedded?.getGlyph(glyph.id)
-      if (target && !target.codePoints.length && glyph.codePoints.length) target.codePoints = glyph.codePoints
+      registerGlyph(run.font, glyph)
     })
   }
   ops.push(lib.endText(), lib.popGraphicsState())

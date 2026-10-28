@@ -224,7 +224,10 @@ export const rtf: FormatHandler = {
             const text = texts.get(index) ?? ''
             // ข้อความที่ต่อจากคำสั่งที่ไม่มีช่องว่างคั่น ต้องเติมช่องว่าง ไม่งั้นจะถูกอ่านเป็นส่วนของคำสั่ง
             const guard = prev?.kind === 'word' && !prev.delimited && /^[a-zA-Z0-9 ]/.test(text) ? ' ' : ''
-            replaced.set(first, guard + encodeRtf(text))
+            const encoded = encodeRtf(text)
+            // ห่อด้วย {\uc1 …} ให้ตัวอ่านข้ามตัวอักษรสำรอง "?" หลัง \uN ทีละ 1 ตัวเสมอ
+            // (เอกสารที่ตั้ง \uc0 หรือ \uc2 ไว้จะแสดง "?" หรือกินข้อความถัดไป)
+            replaced.set(first, /\\u-?\d/.test(encoded) ? `{\\uc1 ${encoded}}` : guard + encoded)
             rest.forEach((idx) => replaced.set(idx, ''))
           })
         })

@@ -31,6 +31,8 @@ const VERTICAL_LANGS: ReadonlySet<LangCode> = new Set<LangCode>(['ja', 'zh'])
 const LATIN_LANGS: ReadonlySet<LangCode> = new Set<LangCode>(['en', 'fr', 'de', 'es'])
 
 const MAX_PARALLEL = 2
+/** ภาพถูกขยายให้ตัวอักษรใหญ่พอก่อนอ่าน — บอกความละเอียดไว้เลย Tesseract จะไม่ต้องเดา (และไม่พิมพ์ "Estimating resolution" ลงคอนโซล) */
+const OCR_DPI = '300'
 const MIN_WORD_CONFIDENCE = 40
 const MIN_REGION_CONFIDENCE = 55
 const MIN_BUBBLE_CONFIDENCE = 65
@@ -460,7 +462,10 @@ export async function recognizeImageText(
       onProgress?.(0.3 + (i / Math.max(1, bubbles.length)) * 0.45)
       if (found.some((f) => contains(bubble, (f.x0 + f.x1) / 2, (f.y0 + f.y1) / 2))) continue // กรอบใหญ่ที่ครอบช่องที่อ่านแล้ว
       const vertical = VERTICAL_LANGS.has(lang) && bubble.y1 - bubble.y0 > bubble.x1 - bubble.x0
-      await ocr.setParameters({ tessedit_pageseg_mode: vertical ? PSM.SINGLE_BLOCK_VERT_TEXT : PSM.SINGLE_BLOCK })
+      await ocr.setParameters({
+        tessedit_pageseg_mode: vertical ? PSM.SINGLE_BLOCK_VERT_TEXT : PSM.SINGLE_BLOCK,
+        user_defined_dpi: OCR_DPI,
+      })
       const { data } = await recognize(cropBubble(canvas, bubble))
       const words = collectWords(data.blocks ?? [], lang, bubble.x0, bubble.y0)
       const region = toFound(words, lang, MIN_BUBBLE_CONFIDENCE, bubble)
@@ -469,7 +474,10 @@ export async function recognizeImageText(
 
     // 2) อ่านทั้งภาพ เก็บข้อความที่อยู่นอกช่องคำพูดที่อ่านแล้ว
     onProgress?.(0.75)
-    await ocr.setParameters({ tessedit_pageseg_mode: VERTICAL_LANGS.has(lang) ? PSM.AUTO : PSM.SPARSE_TEXT })
+    await ocr.setParameters({
+      tessedit_pageseg_mode: VERTICAL_LANGS.has(lang) ? PSM.AUTO : PSM.SPARSE_TEXT,
+      user_defined_dpi: OCR_DPI,
+    })
     const { data } = await recognize(canvas)
     const loose = collectWords(data.blocks ?? [], lang).filter(
       (w) => !found.some((f) => contains(f, (w.x0 + w.x1) / 2, (w.y0 + w.y1) / 2)),
